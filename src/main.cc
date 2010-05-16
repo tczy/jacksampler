@@ -86,6 +86,7 @@ main (int argc, char **argv)
         }
       else if (strcmp (buffer, "q") == 0 || strcmp (buffer, "quit") == 0)
         {
+          jack_deactivate (client);
           return 0;
         }
       else if (strlen (buffer))
