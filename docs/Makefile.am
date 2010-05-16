@@ -1,3 +1,5 @@
+EXTRA_DIST = jacksampler.1.doxi jacksamplerdefs.doxi
+
 dist_man_MANS = jacksampler.1
 
 DOCS_DIR = ~/public_html/jacksampler/docs-$(VERSION)
