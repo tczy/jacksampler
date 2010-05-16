@@ -38,6 +38,9 @@
 #include <jack/jack.h>
 #include <jack/midiport.h>
 
+#include "main.hh"
+#include "jacksampler.hh"
+
 using std::string;
 using std::vector;
 
@@ -115,25 +118,21 @@ isNoteOff (const jack_midi_event_t& event)
   return false;
 }
 
-class JackSampler
-{
-private:
-  double jack_mix_freq;
-
-protected:
-  int process (jack_nframes_t nframes);
-  static int jack_process (jack_nframes_t nframes, void *arg);
-
-public:
-  void init (jack_client_t *client);
-};
-
 void
 JackSampler::init (jack_client_t *client)
 {
   jack_set_process_callback (client, jack_process, this);
 
   jack_mix_freq = jack_get_sample_rate (client);
+
+  input_port = jack_port_register (client, "midi_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
+  output_port = jack_port_register (client, "audio_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+
+  if (jack_activate (client))
+    {
+      fprintf (stderr, "cannot activate client");
+      exit (1);
+    }
 }
 
 int
@@ -283,13 +282,8 @@ JackSampler::jack_process (jack_nframes_t nframes, void *arg)
   return instance->process (nframes);
 }
 
-struct Options
-{
-  string program_name;
-} options;
-
 void
-loadNote (int note, const char *file_name, int instrument)
+loadNote (const Options& options, int note, const char *file_name, int instrument)
 {
   /* open input */
   BseErrorType error;
@@ -342,8 +336,8 @@ loadNote (int note, const char *file_name, int instrument)
   samples.push_back (s);
 }
 
-int
-parseConfig (int instrument, const char *name)
+void
+JackSampler::parse_config (const Options& options, int instrument, const char *name)
 {
   FILE *config = fopen (name, "r");
 
@@ -361,7 +355,7 @@ parseConfig (int instrument, const char *name)
             {
               int note = atoi (note_str);
               const char *file = strtok (NULL, sep);
-              loadNote (note, file, instrument);
+              loadNote (options, note, file, instrument);
               printf ("NOTE %d FILE %s\n", note, file);
             }
         }
@@ -384,64 +378,11 @@ parseConfig (int instrument, const char *name)
             }
         }
     }
-  return 0;
 }
 
-int
-main (int argc, char **argv)
+void
+JackSampler::change_instrument (int new_instrument)
 {
-  /* init */
-  SfiInitValue values[] = {
-    { "stand-alone",            "true" }, /* no rcfiles etc. */
-    { "wave-chunk-padding",     NULL, 1, },
-    { "dcache-block-size",      NULL, 8192, },
-    { "dcache-cache-memory",    NULL, 5 * 1024 * 1024, },
-    { NULL }
-  };
-  bse_init_inprocess (&argc, &argv, NULL, values);
-  //options.parse (&argc, &argv);
-  options.program_name = "sampler";
-
-  if (argc < 2)
-    {
-      fprintf (stderr, "usage: jacksampler <config1> [ <config2> ... <configN> ]\n");
-      exit (1);
-    }
-
-  for (int i = 1; i < argc; i++)
-    parseConfig (i, argv[i]);
-
-  jack_client_t *client;
-  client = jack_client_open ("sampler", JackNullOption, NULL);
-  if (!client)
-    {
-      fprintf (stderr, "unable to connect to jack server\n");
-      exit (1);
-    }
-
-  JackSampler jack_sampler;
-
-  jack_sampler.init (client);
-
-
-  //jack_set_sample_rate_callback (client, srate, 0);
-
-  //jack_on_shutdown (client, jack_shutdown, 0);
-
-  input_port = jack_port_register (client, "midi_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-  output_port = jack_port_register (client, "audio_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-
-  if (jack_activate (client))
-    {
-      fprintf(stderr, "cannot activate client");
-      return 1;
-    }
-
-  while (1)
-    {
-      char buffer[1024];
-      fgets (buffer, 1024, stdin);
-      instrument = atoi (buffer);
-      printf ("INSTRUMENT CHANGED TO %d\n", instrument);
-    }
+  instrument = new_instrument;
+  printf ("JackSampler: changed instrument to %d\n", instrument);
 }
