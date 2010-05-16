@@ -19,10 +19,16 @@
 #include <bse/bsemain.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "main.hh"
 #include "jacksampler.hh"
 
+bool
+is_newline (char ch)
+{
+  return (ch == '\n' || ch == '\r');
+}
 
 int
 main (int argc, char **argv)
@@ -65,9 +71,28 @@ main (int argc, char **argv)
 
   while (1)
     {
+      printf ("JackSampler> ");
+      fflush (stdout);
       char buffer[1024];
       fgets (buffer, 1024, stdin);
+
+      while (strlen (buffer) && is_newline (buffer[strlen (buffer) - 1]))
+        buffer[strlen (buffer) - 1] = 0;
+
       int instrument = atoi (buffer);
-      jack_sampler.change_instrument (instrument);
+      if (instrument > 0)
+        {
+          jack_sampler.change_instrument (instrument);
+        }
+      else if (strcmp (buffer, "q") == 0 || strcmp (buffer, "quit") == 0)
+        {
+          return 0;
+        }
+      else if (strlen (buffer))
+        {
+          printf ("JackSampler keyboard commands:\n\n");
+          printf ("  1, 2, 3, ...    switch to instrument 1, 2, 3, ...\n");
+          printf ("  q, quit         quit JackSampler\n");
+        }
     }
 }
