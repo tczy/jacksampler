@@ -24,7 +24,7 @@ AC_DEFUN([AC_JACK_REQUIREMENTS],
 
 # We need pkg-config
 AC_CHECK_PROG(HAVE_PKG_CONFIG,pkg-config,yes,no)
-if test "$HAVE_PKG_CONFIG" == "no"; then
+if test "$HAVE_PKG_CONFIG" = "no"; then
   echo "You need to have pkg-config installed to build this package"
   exit 1
 fi
