@@ -61,6 +61,7 @@ protected:
   jack_port_t  *output_port;
 
   int           instrument;
+  int           instrument_count;
   bool          pedal_down;
 
   double        release_delay_ms;
@@ -77,9 +78,10 @@ protected:
 public:
   JackSampler();
 
-  void init (jack_client_t *client);
+  void init (const Options& options, jack_client_t *client, int argc, char **argv);
   void parse_config (const Options& options, int instrument, const char *name);
   void change_instrument (int new_instrument);
+  void status();
 };
 
 #endif

@@ -54,9 +54,6 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  for (int i = 1; i < argc; i++)
-    jack_sampler.parse_config (options, i, argv[i]);
-
   jack_client_t *client;
   client = jack_client_open ("sampler", JackNullOption, NULL);
   if (!client)
@@ -65,7 +62,7 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  jack_sampler.init (client);
+  jack_sampler.init (options, client, argc, argv);
   //jack_set_sample_rate_callback (client, srate, 0);
   //jack_on_shutdown (client, jack_shutdown, 0);
 
@@ -84,6 +81,10 @@ main (int argc, char **argv)
         {
           jack_sampler.change_instrument (instrument);
         }
+      else if (strcmp (buffer, "s") == 0 || strcmp (buffer, "status") == 0)
+        {
+          jack_sampler.status();
+        }
       else if (strcmp (buffer, "q") == 0 || strcmp (buffer, "quit") == 0)
         {
           jack_deactivate (client);
@@ -93,6 +94,7 @@ main (int argc, char **argv)
         {
           printf ("JackSampler keyboard commands:\n\n");
           printf ("  1, 2, 3, ...    switch to instrument 1, 2, 3, ...\n");
+          printf ("  s, status       show status information\n");
           printf ("  q, quit         quit JackSampler\n");
         }
     }

@@ -82,13 +82,18 @@ JackSampler::JackSampler() :
   pedal_down (false),
   release_delay_ms (0),
   release_ms (50),
-  mout (0)
+  mout (0),
+  instrument_count (0)
 {
 }
 
 void
-JackSampler::init (jack_client_t *client)
+JackSampler::init (const Options& options, jack_client_t *client, int argc, char **argv)
 {
+  for (int i = 1; i < argc; i++)
+    parse_config (options, i, argv[i]);
+  instrument_count = argc - 1;
+
   jack_set_process_callback (client, jack_process, this);
 
   jack_mix_freq = jack_get_sample_rate (client);
@@ -353,4 +358,36 @@ JackSampler::change_instrument (int new_instrument)
 {
   instrument = new_instrument;
   printf ("JackSampler: changed instrument to %d\n", instrument);
+}
+
+void
+JackSampler::status()
+{
+  int unused = 0;
+  int on = 0;
+  int release_delay = 0;
+  int fade_out = 0;
+
+  for (size_t i = 0; i < voices.size(); i++)
+    {
+      if (voices[i].state == Voice::UNUSED)
+        unused++;
+      else if (voices[i].state == Voice::ON)
+        on++;
+      else if (voices[i].state == Voice::RELEASE_DELAY)
+        release_delay++;
+      else if (voices[i].state == Voice::FADE_OUT)
+        fade_out++;
+      else
+        g_assert_not_reached();
+    }
+  printf ("sampling rate:   %.2f\n", jack_mix_freq);
+  printf ("instruments:     %d\n", instrument_count);
+  printf ("active instr.:   %d\n", instrument);
+  printf ("total voices:    %d\n", voices.size());
+  printf ("\n");
+  printf (" * unused        %d\n", unused);
+  printf (" * on            %d\n", on);
+  printf (" * release delay %d\n", release_delay);
+  printf (" * fade out      %d\n", fade_out);
 }
