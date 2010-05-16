@@ -44,43 +44,13 @@
 using std::string;
 using std::vector;
 
-double        mout = 0.0;
-double        release_delay_ms = 0;
-double        release_ms = 50;
-
-int            instrument = 1;
-bool           pedal_down = false;
-
-struct Voice
-{
-  enum { UNUSED, ON, RELEASE_DELAY, FADE_OUT } state;
-
-  double env;
-  double pos;
-  double frequency;
-  double velocity;
-  double rd_pos;
-  bool   pedal;
-  int note;
-
-  Sample *sample;
-
-  Voice()
-    : state (UNUSED),
-      pedal (false)
-  {
-  }
-};
-
-vector<Voice> voices (256);
-
-float
+static float
 freqFromNote (float note)
 {
   return 440 * exp (log (2) * (note - 69) / 12.0);
 }
 
-bool
+static bool
 isNoteOn (const jack_midi_event_t& event)
 {
   if ((event.buffer[0] & 0xf0) == 0x90)
@@ -91,7 +61,7 @@ isNoteOn (const jack_midi_event_t& event)
   return false;
 }
 
-bool
+static bool
 isNoteOff (const jack_midi_event_t& event)
 {
   if ((event.buffer[0] & 0xf0) == 0x90)
@@ -104,6 +74,16 @@ isNoteOff (const jack_midi_event_t& event)
       return true;
     }
   return false;
+}
+
+JackSampler::JackSampler() :
+  voices (256),
+  instrument (1),
+  pedal_down (false),
+  release_delay_ms (0),
+  release_ms (50),
+  mout (0)
+{
 }
 
 void

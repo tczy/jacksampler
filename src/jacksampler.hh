@@ -31,21 +31,52 @@ struct Sample
   int                instrument;
 };
 
+struct Voice
+{
+  enum { UNUSED, ON, RELEASE_DELAY, FADE_OUT } state;
+
+  double env;
+  double pos;
+  double frequency;
+  double velocity;
+  double rd_pos;
+  bool   pedal;
+  int note;
+
+  Sample *sample;
+
+  Voice()
+    : state (UNUSED),
+      pedal (false)
+  {
+  }
+};
+
 class JackSampler
 {
 protected:
-  double       jack_mix_freq;
+  double        jack_mix_freq;
 
-  jack_port_t *input_port;
-  jack_port_t *output_port;
+  jack_port_t  *input_port;
+  jack_port_t  *output_port;
+
+  int           instrument;
+  bool          pedal_down;
+
+  double        release_delay_ms;
+  double        release_ms;
+  double        mout;
 
   std::vector<Sample> samples;
+  std::vector<Voice> voices;
 
   void        load_note (const Options& options, int note, const char *file_name, int instrument);
   int         process (jack_nframes_t nframes);
   static int  jack_process (jack_nframes_t nframes, void *arg);
 
 public:
+  JackSampler();
+
   void init (jack_client_t *client);
   void parse_config (const Options& options, int instrument, const char *name);
   void change_instrument (int new_instrument);
