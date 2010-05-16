@@ -115,8 +115,29 @@ isNoteOff (const jack_midi_event_t& event)
   return false;
 }
 
+class JackSampler
+{
+private:
+  double jack_mix_freq;
+
+protected:
+  int process (jack_nframes_t nframes);
+  static int jack_process (jack_nframes_t nframes, void *arg);
+
+public:
+  void init (jack_client_t *client);
+};
+
+void
+JackSampler::init (jack_client_t *client)
+{
+  jack_set_process_callback (client, jack_process, this);
+
+  jack_mix_freq = jack_get_sample_rate (client);
+}
+
 int
-process (jack_nframes_t nframes, void *arg)
+JackSampler::process (jack_nframes_t nframes)
 {
   jack_default_audio_sample_t *out = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port, nframes);
   void* port_buf = jack_port_get_buffer (input_port, nframes);
@@ -221,8 +242,8 @@ process (jack_nframes_t nframes, void *arg)
         {
           if (voices[v].state != Voice::UNUSED)
             {
-              // FIXME 48000!
-              voices[v].pos += voices[v].frequency / voices[v].sample->osc_freq * voices[v].sample->mix_freq / 48000;
+              voices[v].pos += voices[v].frequency / voices[v].sample->osc_freq *
+                               voices[v].sample->mix_freq / jack_mix_freq;
 
               int ipos = voices[v].pos;
               double dpos = voices[v].pos - ipos;
@@ -235,15 +256,13 @@ process (jack_nframes_t nframes, void *arg)
             }
           if (voices[v].state == Voice::RELEASE_DELAY)
             {
-              // FIXME 48000!
-              voices[v].rd_pos += 1000.0 / 48000;
+              voices[v].rd_pos += 1000.0 / jack_mix_freq;
               if (voices[v].rd_pos > release_delay_ms)
                 voices[v].state = Voice::FADE_OUT;
             }
           if (voices[v].state == Voice::FADE_OUT)
             {
-              const double release_ms = 300;
-              voices[v].env -= (1000.0 / 48000) / release_ms;
+              voices[v].env -= (1000.0 / jack_mix_freq) / release_ms;
               if (voices[v].env <= 0)
                 {
                   voices[v].state = Voice::UNUSED;
@@ -255,6 +274,13 @@ process (jack_nframes_t nframes, void *arg)
       mout = std::max (fabs (out[i]), mout);
     }
   return 0;
+}
+
+int
+JackSampler::jack_process (jack_nframes_t nframes, void *arg)
+{
+  JackSampler *instance = reinterpret_cast<JackSampler *> (arg);
+  return instance->process (nframes);
 }
 
 struct Options
@@ -378,7 +404,7 @@ main (int argc, char **argv)
 
   if (argc < 2)
     {
-      fprintf (stderr, "usage: sampler <config1> [ <config2> ... <configN> ]\n");
+      fprintf (stderr, "usage: jacksampler <config1> [ <config2> ... <configN> ]\n");
       exit (1);
     }
 
@@ -393,9 +419,10 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  printf ("%d\n", jack_get_sample_rate (client));
+  JackSampler jack_sampler;
 
-  jack_set_process_callback (client, process, 0);
+  jack_sampler.init (client);
+
 
   //jack_set_sample_rate_callback (client, srate, 0);
 
