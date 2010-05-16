@@ -386,7 +386,7 @@ main (int argc, char **argv)
     parseConfig (i, argv[i]);
 
   jack_client_t *client;
-  client = jack_client_new ("sampler");
+  client = jack_client_open ("sampler", JackNullOption, NULL);
   if (!client)
     {
       fprintf (stderr, "unable to connect to jack server\n");
