@@ -33,5 +33,5 @@ fi
 AC_BSE_REQUIREMENTS
 AC_JACK_REQUIREMENTS
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile docs/Makefile])
 AC_OUTPUT

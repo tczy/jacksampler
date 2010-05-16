@@ -1,0 +1,61 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{rvstamp,parse_date} $Date: 2006/04/19 00:50:37 $
+@include "jacksamplerdefs.doxi"
+@doxer_set{title}	jacksampler - A JACK based sampler
+@doxer_set{man-title}	JackSampler
+@doxer_set{man-date}	@doxer_get{rvstamp}
+@doxer_set{man-source}	jacksampler-@doxer_get{BST_VERSION}
+@doxer_set{man-manual}	JackSampler Manual Page
+
+@heading NAME
+jacksampler - A JACK based sampler
+
+@heading SYNOPSIS
+	@manb{jacksampler} [@mani{ConfigFiles...}]
+
+@heading DESCRIPTION
+	@manb{jacksampler} is a JACK based sampler, which plays sample files depending
+        on JACK midi input.
+
+@heading CONFIGURATION
+        JackSampler supports playing multiple instruments; the user can switch
+        the active instrument using the keyboard while JackSampler runs. For
+        each instrument, an ascii based configuration file determines which
+        sample is played for which note. JackSampler chooses the nearest sample
+        if no exact match can be found, and plays that sample slower or faster
+        so that the sample will have the right frequency which corrsponds to the
+        midi note.
+
+        For each instrument, a configuration file can contain multiple entries
+        for samples, looking like this:
+
+        sample 24 grand-piano/c1a.wav @*
+        sample 31 grand-piano/g1b.wav @*
+        sample 36 grand-piano/c2.wav @*
+        ...
+
+        There are two additional configuration parameters; one is the time
+        jacksampler uses to fade out the sample on note release in milliseconds.
+        A configuration entry could look like this:
+
+        release 100
+
+        Also there is the possibility to delay the release, so that after the
+        note off event is received, a delay occurs until the note is really
+        faded out, a sample entry looks like this:
+
+        release_delay 100
+
+        Lines starting with a # are ignored. JackSampler also interprets the
+        sustain pedal by not releasing notes if the sustain pedal is on,
+        postponing their release until its off again.
+
+@heading KEYBOARD
+        Typing s, status or q, quit displays status information, or quits
+        jacksampler. Typing a number switches to the corresponding
+        instrument. The first command line argument is used as configuration
+        for instrument 1, the second command line argument is used as
+        configuration for instrument 2, and so on.
+
+@heading SEE ALSO
+@longuri{http://space.twc.de/~stefan/jacksampler.php, jacksampler Website}

@@ -1,0 +1,95 @@
+.\" generator: doxer.py 0.6
+.\" generation: 2010-05-16T19:52:30
+.TH "JackSampler" "1" "Wed Apr 19 00:50:37 2006" "jacksampler-" "JackSampler Manual Page"
+
+.SH
+NAME
+
+
+.PP
+jacksampler - A JACK based sampler
+.SH
+SYNOPSIS
+
+
+.PP
+\fBjacksampler\fP [\fIConfigFiles...\fP]
+.SH
+DESCRIPTION
+
+
+.PP
+\fBjacksampler\fP is a JACK based sampler, which plays sample files depending
+on JACK midi input.
+.SH
+CONFIGURATION
+
+
+.PP
+JackSampler supports playing multiple instruments; the user can switch
+the active instrument using the keyboard while JackSampler runs. For
+each instrument, an ascii based configuration file determines which
+sample is played for which note. JackSampler chooses the nearest sample
+if no exact match can be found, and plays that sample slower or faster
+so that the sample will have the right frequency which corrsponds to the
+midi note.
+.br
+
+.br
+For each instrument, a configuration file can contain multiple entries
+for samples, looking like this:
+.br
+
+.br
+sample 24 grand-piano/c1a.wav 
+.br
+
+sample 31 grand-piano/g1b.wav 
+.br
+
+sample 36 grand-piano/c2.wav 
+.br
+
+...
+.br
+
+.br
+There are two additional configuration parameters; one is the time
+jacksampler uses to fade out the sample on note release in milliseconds.
+A configuration entry could look like this:
+.br
+
+.br
+release 100
+.br
+
+.br
+Also there is the possibility to delay the release, so that after the
+note off event is received, a delay occurs until the note is really
+faded out, a sample entry looks like this:
+.br
+
+.br
+release_delay 100
+.br
+
+.br
+Lines starting with a # are ignored. JackSampler also interprets the
+sustain pedal by not releasing notes if the sustain pedal is on,
+postponing their release until its off again.
+.SH
+KEYBOARD
+
+
+.PP
+Typing s, status or q, quit displays status information, or quits
+jacksampler. Typing a number switches to the corresponding
+instrument. The first command line argument is used as configuration
+for instrument 1, the second command line argument is used as
+configuration for instrument 2, and so on.
+.SH
+SEE ALSO
+
+
+.PP
+jacksampler Website (http://space.twc.de/~stefan/jacksampler.php)
