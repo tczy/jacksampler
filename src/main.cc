@@ -24,7 +24,7 @@
 #include "main.hh"
 #include "jacksampler.hh"
 
-bool
+static bool
 is_newline (char ch)
 {
   return (ch == '\n' || ch == '\r');

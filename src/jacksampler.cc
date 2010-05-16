@@ -40,6 +40,7 @@
 
 #include "main.hh"
 #include "jacksampler.hh"
+#include "microconf.hh"
 
 using std::string;
 using std::vector;
@@ -312,43 +313,32 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
 void
 JackSampler::parse_config (const Options& options, int instrument, const char *name)
 {
-  FILE *config = fopen (name, "r");
+  MicroConf cfg (name);
 
-  char buffer[1024];
-
-  while (fgets (buffer, 1024, config))
+  while (cfg.next())
     {
-      const char *sep = " \t\n";
-      const char *command = strtok (buffer, sep);
-      if (command && strcmp (command, "sample") == 0)
-        {
-          const char *note_str = strtok (NULL, sep);
+      int    note = 0;
+      double d = 0;
+      string file;
 
-          if (note_str)
-            {
-              int note = atoi (note_str);
-              const char *file = strtok (NULL, sep);
-              load_note (options, note, file, instrument);
-              printf ("NOTE %d FILE %s\n", note, file);
-            }
-        }
-      else if (command && strcmp (command, "release_delay") == 0)
+      if (cfg.command ("sample", note, file))
         {
-          const char *rd_str = strtok (NULL, sep);
-          if (rd_str)
-            {
-              release_delay_ms = atof (rd_str);
-              printf ("RELEASE_DELAY %f ms\n", release_delay_ms);
-            }
+          load_note (options, note, file.c_str(), instrument);
+          printf ("NOTE %d FILE %s\n", note, file.c_str());
         }
-      else if (command && strcmp (command, "release") == 0)
+      else if (cfg.command ("release_delay", d))
         {
-          const char *rd_str = strtok (NULL, sep);
-          if (rd_str)
-            {
-              release_ms = atof (rd_str);
-              printf ("RELEASE %f ms\n", release_ms);
-            }
+          release_delay_ms = d;
+          printf ("RELEASE_DELAY %f ms\n", release_delay_ms);
+        }
+      else if (cfg.command ("release", d))
+        {
+          release_ms = d;
+          printf ("RELEASE %f ms\n", release_ms);
+        }
+      else
+        {
+          cfg.die_if_unknown();
         }
     }
 }
