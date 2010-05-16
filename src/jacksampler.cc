@@ -164,18 +164,18 @@ JackSampler::process (jack_nframes_t nframes)
               /* note on */
               //printf ("note off %d\n", in_event.buffer[1]);
 
-              int v = 0;
-              while ((v < voices.size()) && (voices[v].state != Voice::ON || voices[v].note != in_event.buffer[1])) // FIXME: handle sustained notes
-                v++;
-              if (v != voices.size())
+              for (int v = 0; v < voices.size(); v++)
                 {
-                  if (pedal_down)
-                    voices[v].pedal = true;
-                  else
+                  if (voices[v].state == Voice::ON && voices[v].note == in_event.buffer[1])
                     {
-                      //printf ("off voice %d\n", v);
-                      voices[v].state = Voice::RELEASE_DELAY;
-                      voices[v].rd_pos = 0;
+                      if (pedal_down)
+                        voices[v].pedal = true;
+                      else
+                        {
+                          //printf ("off voice %d\n", v);
+                          voices[v].state = Voice::RELEASE_DELAY;
+                          voices[v].rd_pos = 0;
+                        }
                     }
                 }
             }
@@ -191,7 +191,7 @@ JackSampler::process (jack_nframes_t nframes)
                       /* release voices which are sustained due to the pedal */
                       for (int v = 0; v < voices.size(); v++)
                         {
-                          if (voices[v].pedal == true)
+                          if (voices[v].pedal)
                             {
                               voices[v].state = Voice::RELEASE_DELAY;
                               voices[v].rd_pos = 0;
