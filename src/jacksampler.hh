@@ -21,15 +21,29 @@
 #define JACK_SAMPLER_JACK_SAMPLER_HH
 
 #include <jack/jack.h>
+#include "main.hh"
+
+struct Sample
+{
+  double             mix_freq;
+  double             osc_freq;
+  std::vector<float> pcm_data;
+  int                instrument;
+};
 
 class JackSampler
 {
-private:
-  double jack_mix_freq;
-
 protected:
-  int process (jack_nframes_t nframes);
-  static int jack_process (jack_nframes_t nframes, void *arg);
+  double       jack_mix_freq;
+
+  jack_port_t *input_port;
+  jack_port_t *output_port;
+
+  std::vector<Sample> samples;
+
+  void        load_note (const Options& options, int note, const char *file_name, int instrument);
+  int         process (jack_nframes_t nframes);
+  static int  jack_process (jack_nframes_t nframes, void *arg);
 
 public:
   void init (jack_client_t *client);

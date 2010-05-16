@@ -44,22 +44,10 @@
 using std::string;
 using std::vector;
 
-jack_port_t *input_port;
-jack_port_t *output_port;
-
 double        mout = 0.0;
 double        release_delay_ms = 0;
 double        release_ms = 50;
 
-struct Sample
-{
-  double        mix_freq;
-  double        osc_freq;
-  vector<float> pcm_data;
-  int           instrument;
-};
-
-vector<Sample> samples;
 int            instrument = 1;
 bool           pedal_down = false;
 
@@ -283,7 +271,7 @@ JackSampler::jack_process (jack_nframes_t nframes, void *arg)
 }
 
 void
-loadNote (const Options& options, int note, const char *file_name, int instrument)
+JackSampler::load_note (const Options& options, int note, const char *file_name, int instrument)
 {
   /* open input */
   BseErrorType error;
@@ -355,7 +343,7 @@ JackSampler::parse_config (const Options& options, int instrument, const char *n
             {
               int note = atoi (note_str);
               const char *file = strtok (NULL, sep);
-              loadNote (options, note, file, instrument);
+              load_note (options, note, file, instrument);
               printf ("NOTE %d FILE %s\n", note, file);
             }
         }
