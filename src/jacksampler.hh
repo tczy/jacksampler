@@ -82,6 +82,7 @@ public:
   void parse_config (const Options& options, int instrument, const char *name);
   void change_instrument (int new_instrument);
   void status();
+  void reset();
 };
 
 #endif

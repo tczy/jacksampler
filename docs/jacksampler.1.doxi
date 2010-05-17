@@ -51,11 +51,19 @@ jacksampler - A JACK based sampler
         postponing their release until its off again.
 
 @heading KEYBOARD
-        Typing s, status or q, quit displays status information, or quits
-        jacksampler. Typing a number switches to the corresponding
-        instrument. The first command line argument is used as configuration
-        for instrument 1, the second command line argument is used as
-        configuration for instrument 2, and so on.
+
+@itemize{none}
+@item @manb{1}, @manb{2}, @manb{3}, @manb{...} @*
+        Switches to the corresponding instrument. The first command line argument
+        is used as configuration for instrument 1, the second command line
+        argument is used as configuration for instrument 2, and so on.
+@item @manb{s}, @manb{status} @*
+        Show status information.
+@item @manb{r}, @manb{reset} @*
+        Reset all voices (release all notes) - this command may click.
+@item @manb{q}, @manb{quit} @*
+        Quit jacksampler.
+@done
 
 @heading SEE ALSO
 @longuri{http://space.twc.de/~stefan/jacksampler.php, jacksampler Website}

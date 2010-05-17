@@ -381,3 +381,11 @@ JackSampler::status()
   printf (" * release delay %d\n", release_delay);
   printf (" * fade out      %d\n", fade_out);
 }
+
+void
+JackSampler::reset()
+{
+  // reset all voices the hard way (might click)
+  for (size_t v = 0; v < voices.size(); v++)
+    voices[v].state = Voice::UNUSED;
+}

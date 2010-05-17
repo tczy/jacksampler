@@ -1,5 +1,5 @@
 .\" generator: doxer.py 0.6
-.\" generation: 2010-05-16T19:52:30
+.\" generation: 2010-05-16T21:35:54
 .TH "JackSampler" "1" "Wed Apr 19 00:50:37 2006" "jacksampler-" "JackSampler Manual Page"
 
 .SH
@@ -82,11 +82,35 @@ KEYBOARD
 
 
 .PP
-Typing s, status or q, quit displays status information, or quits
-jacksampler. Typing a number switches to the corresponding
-instrument. The first command line argument is used as configuration
-for instrument 1, the second command line argument is used as
-configuration for instrument 2, and so on.
+
+
+
+
+.TP
+\fB1\fP, \fB2\fP, \fB3\fP, \fB...\fP 
+.br
+Switches to the corresponding instrument. The first command line argument
+is used as configuration for instrument 1, the second command line
+argument is used as configuration for instrument 2, and so on.
+
+.TP
+\fBs\fP, \fBstatus\fP 
+.br
+Show status information.
+
+.TP
+\fBr\fP, \fBreset\fP 
+.br
+Reset all voices (release all notes) - this command may click.
+
+.TP
+\fBq\fP, \fBquit\fP 
+.br
+Quit jacksampler.
+
+.PP
+
+
 .SH
 SEE ALSO
 

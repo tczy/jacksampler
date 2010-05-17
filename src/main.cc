@@ -90,11 +90,16 @@ main (int argc, char **argv)
           jack_deactivate (client);
           return 0;
         }
+      else if (strcmp (buffer, "r") == 0 || strcmp (buffer, "reset") == 0)
+        {
+          jack_sampler.reset();
+        }
       else if (strlen (buffer))
         {
           printf ("JackSampler keyboard commands:\n\n");
           printf ("  1, 2, 3, ...    switch to instrument 1, 2, 3, ...\n");
           printf ("  s, status       show status information\n");
+          printf ("  r, reset        reset all voices (release all notes)\n");
           printf ("  q, quit         quit JackSampler\n");
         }
     }
