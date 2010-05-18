@@ -1,3 +1,4 @@
 - make release time and release delay time instrument specific
 - use a better resampling algorithm
 - make master_volume configurable
+- stereo support
