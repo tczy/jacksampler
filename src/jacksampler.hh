@@ -21,6 +21,7 @@
 #define JACK_SAMPLER_JACK_SAMPLER_HH
 
 #include <jack/jack.h>
+#include <vector>
 #include "main.hh"
 
 struct Sample
