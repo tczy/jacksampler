@@ -29,12 +29,13 @@ private:
   int                      current_no;
   std::string              current_file;
   std::vector<std::string> tokens;
+  bool                     tokenizer_error;
 
   bool convert (const std::string& token, int& arg);
   bool convert (const std::string& token, double& arg);
   bool convert (const std::string& token, std::string& arg);
 
-  void tokenize();
+  bool tokenize();
 public:
   MicroConf (const std::string& filename);
 
@@ -45,14 +46,14 @@ public:
   template<class T1>
   bool command (const std::string& cmd, T1& arg1)
   {
-    if (tokens.size() != 2 || cmd != tokens[0])
+    if (tokenizer_error || tokens.size() != 2 || cmd != tokens[0])
       return false;
     return convert (tokens[1], arg1);
   }
   template<class T1, class T2>
   bool command (const std::string& cmd, T1& arg1, T2& arg2)
   {
-    if (tokens.size() != 3 || cmd != tokens[0])
+    if (tokenizer_error || tokens.size() != 3 || cmd != tokens[0])
       return false;
     return convert (tokens[1], arg1) && convert (tokens[2], arg2);
   }

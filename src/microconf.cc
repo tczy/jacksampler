@@ -51,7 +51,7 @@ MicroConf::next()
   while (!current_line.empty() && is_newline (current_line[current_line.size() - 1]))
     current_line.resize (current_line.size() - 1);
 
-  tokenize();
+  tokenizer_error = !tokenize();
 
   return true;
 }
@@ -83,10 +83,10 @@ white_space (char ch)
   return (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\r');
 }
 
-void
+bool
 MicroConf::tokenize()
 {
-  enum { BLANK, STRING, COMMENT } state = BLANK;
+  enum { BLANK, STRING, QUOTED_STRING, QUOTED_STRING_ESCAPED, COMMENT } state = BLANK;
   string s;
 
   string xline = current_line + '\n';
@@ -98,21 +98,52 @@ MicroConf::tokenize()
           state = STRING;
           s += *i;
         }
+      else if (state == BLANK && *i == '"')
+        {
+          state = QUOTED_STRING;
+        }
+      else if (state == BLANK && white_space (*i))
+        {
+          // ignore more whitespaces if we've already seen one
+        }
       else if (state == STRING && string_chars (*i))
         {
           s += *i;
         }
-      else if (state == STRING && white_space (*i))
+      else if (state == STRING && white_space (*i)
+           ||  state == QUOTED_STRING && *i == '"')
         {
           tokens.push_back (s);
           s = "";
           state = BLANK;
         }
+      else if (state == QUOTED_STRING && *i == '\\')
+        {
+          state = QUOTED_STRING_ESCAPED;
+        }
+      else if (state == QUOTED_STRING)
+        {
+          s += *i;
+        }
+      else if (state == QUOTED_STRING_ESCAPED)
+        {
+          s += *i;
+          state = QUOTED_STRING;
+        }
       else if (*i == '#')
         {
           state = COMMENT;
         }
+      else if (state == COMMENT)
+        {
+          // ignore comments
+        }
+      else
+        {
+          return false;
+        }
     }
+  return state == BLANK;
 }
 
 bool
