@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <stdlib.h>
+#include <assert.h>
 #include "microconf.hh"
 
 using std::string;
@@ -30,6 +31,12 @@ MicroConf::MicroConf (const string& filename)
   current_no = 0;
 }
 
+bool
+MicroConf::open_ok()
+{
+  return cfg_file != NULL;
+}
+
 static bool
 is_newline (char ch)
 {
@@ -39,6 +46,8 @@ is_newline (char ch)
 bool
 MicroConf::next()
 {
+  assert (cfg_file != NULL);
+
   char s[1024];
 
   if (!fgets (s, 1024, cfg_file))
