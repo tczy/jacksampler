@@ -22,6 +22,7 @@
 
 #include <jack/jack.h>
 #include <vector>
+#include <string>
 #include "main.hh"
 
 struct Sample
@@ -30,6 +31,7 @@ struct Sample
   double             osc_freq;
   std::vector<float> pcm_data;
   int                instrument;
+  std::string        file_name;
 };
 
 struct Voice
