@@ -4,7 +4,7 @@
 @doxer_set{title}	jacksampler - A JACK based sampler
 @doxer_set{man-title}	JackSampler
 @doxer_set{man-date}	@doxer_get{rvstamp}
-@doxer_set{man-source}	jacksampler-@doxer_get{BST_VERSION}
+@doxer_set{man-source}	jacksampler-@doxer_get{JACKSAMPLER_VERSION}
 @doxer_set{man-manual}	JackSampler Manual Page
 
 @heading NAME

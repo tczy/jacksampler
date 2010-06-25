@@ -153,7 +153,11 @@ JackSampler::process (jack_nframes_t nframes)
                         }
                     }
                   if (voices[v].sample) /* only switch to on if a sample was found */
-                    voices[v].state = Voice::ON;
+                    {
+                      voices[v].state = Voice::ON;
+                      //printf ("sample=%s\n", voices[v].sample->file_name.c_str());
+                      //printf ("stepping=%f\n", voices[v].frequency / voices[v].sample->osc_freq * voices[v].sample->mix_freq / jack_mix_freq);
+                    }
                 }
               else
                 {
@@ -162,7 +166,7 @@ JackSampler::process (jack_nframes_t nframes)
             }
           else if (isNoteOff (in_event))
             {
-              /* note on */
+              /* note off */
               //printf ("note off %d\n", in_event.buffer[1]);
 
               for (int v = 0; v < voices.size(); v++)
@@ -307,6 +311,7 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
   s.mix_freq = gsl_data_handle_mix_freq (dhandle);
   s.osc_freq = freqFromNote (note);
   s.instrument = instrument;
+  s.file_name = file_name;
   samples.push_back (s);
 }
 

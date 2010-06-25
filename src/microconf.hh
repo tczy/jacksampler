@@ -39,6 +39,7 @@ private:
 public:
   MicroConf (const std::string& filename);
 
+  bool open_ok();
   bool next();
   std::string line();
   void die_if_unknown();

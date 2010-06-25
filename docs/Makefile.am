@@ -3,7 +3,7 @@ EXTRA_DIST = jacksampler.1.doxi jacksamplerdefs.doxi
 dist_man_MANS = jacksampler.1
 
 DOCS_DIR = ~/public_html/jacksampler/docs-$(VERSION)
-DOXER = ~/src/beast/doxer/doxer.py  
+DOXER = ~/src/beast/doxer/doxer.py -D JACKSAMPLER_VERSION $(VERSION)
 
 rebuild-manpage:
 	$(DOXER) doxi2man jacksampler.1.doxi
