@@ -1,3 +1,6 @@
+JackSampler 0.0.2:
+- relocatable samples
+
 - make release time and release delay time instrument specific
 - use a better resampling algorithm
 - make master_volume configurable
