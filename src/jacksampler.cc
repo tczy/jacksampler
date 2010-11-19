@@ -295,6 +295,7 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
     }
 
   Sample s;
+  s.channels = waveDsc->n_channels;
 
   vector<float> block (1024);
   uint64 pos = 0;
@@ -307,7 +308,7 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
         s.pcm_data.push_back (block[i]);
       pos += r;
     }
-  printf ("loaded sample, length = %ld\n", s.pcm_data.size());
+  printf ("loaded sample, length = %ld, channels = %d\n", s.pcm_data.size(), s.channels);
   s.mix_freq = gsl_data_handle_mix_freq (dhandle);
   s.osc_freq = freqFromNote (note);
   s.instrument = instrument;
