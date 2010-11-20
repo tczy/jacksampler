@@ -229,28 +229,28 @@ JackSampler::process (jack_nframes_t nframes)
 	      double dpos = voices[v].pos - ipos;
 	      //printf ("debug 1: ipos %d dpos %f\n", ipos, dpos);
 	      switch (voices[v].sample->channels) 
-	      {
-	      case 1:
-		if (ipos < (voices[v].sample->pcm_data.size() - 1))
-		{
-		  double left = voices[v].sample->pcm_data[ipos];
-		  double right = voices[v].sample->pcm_data[ipos + 1];
-		  out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
-		  out_r[i] = out_l[i];
+	        {
+		case 1:
+		  if (ipos < (voices[v].sample->pcm_data.size() - 1))
+		    {
+		      double left = voices[v].sample->pcm_data[ipos];
+		      double right = voices[v].sample->pcm_data[ipos + 1];
+		      out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		      out_r[i] = out_l[i];
+		    }
+		  break;
+		case 2:
+		  if (ipos < (voices[v].sample->pcm_data_l.size() - 1))
+		    {
+		      double left = voices[v].sample->pcm_data_l[ipos];
+		      double right = voices[v].sample->pcm_data_l[ipos + 1];
+		      out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		      left = voices[v].sample->pcm_data_r[ipos];
+		      right = voices[v].sample->pcm_data_r[ipos + 1];
+		      out_r[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		    }
+		  break;
 		}
-		break;
-	      case 2:
-		if (ipos < (voices[v].sample->pcm_data_l.size() - 1))
-		{
-		  double left = voices[v].sample->pcm_data_l[ipos];
-		  double right = voices[v].sample->pcm_data_l[ipos + 1];
-		  out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
-		  left = voices[v].sample->pcm_data_r[ipos];
-		  right = voices[v].sample->pcm_data_r[ipos + 1];
-		  out_r[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
-		}
-		break;
-	      }
             }
           if (voices[v].state == Voice::RELEASE_DELAY)
             {
@@ -332,15 +332,15 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
       pos += r;
     }
   if (s.channels == 2)
-  {
-    for( vector<float>::const_iterator iter = s.pcm_data.begin();
-	 iter != s.pcm_data.end(); ++iter ) {
-      s.pcm_data_l.push_back (*iter);
-      ++iter;
-      s.pcm_data_r.push_back (*iter);
+    {
+      for( vector<float>::const_iterator iter = s.pcm_data.begin();
+	   iter != s.pcm_data.end(); ++iter ) {
+	s.pcm_data_l.push_back (*iter);
+	++iter;
+	s.pcm_data_r.push_back (*iter);
+      }
+      // TODO: delete unneeded s.pcm_data
     }
-    // TODO: delete unneeded s.pcm_data
-  }
   printf ("loaded sample, length = %ld, channels = %d\n", s.pcm_data.size(), s.channels);
   s.mix_freq = gsl_data_handle_mix_freq (dhandle);
   s.osc_freq = freqFromNote (note);
