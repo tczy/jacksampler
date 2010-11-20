@@ -222,9 +222,6 @@ JackSampler::process (jack_nframes_t nframes)
         {
           if (voices[v].state != Voice::UNUSED)
             {
-              voices[v].pos += voices[v].frequency / voices[v].sample->osc_freq *
-                               voices[v].sample->mix_freq / jack_mix_freq;
-
 	      int ipos = voices[v].pos;
 	      double dpos = voices[v].pos - ipos;
 	      //printf ("debug 1: ipos %d dpos %f\n", ipos, dpos);
@@ -251,6 +248,9 @@ JackSampler::process (jack_nframes_t nframes)
 		    }
 		  break;
 		}
+
+              voices[v].pos += voices[v].frequency / voices[v].sample->osc_freq *
+		               voices[v].sample->mix_freq / jack_mix_freq;
             }
           if (voices[v].state == Voice::RELEASE_DELAY)
             {
