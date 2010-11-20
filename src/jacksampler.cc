@@ -100,7 +100,8 @@ JackSampler::init (const Options& options, jack_client_t *client, int argc, char
   jack_mix_freq = jack_get_sample_rate (client);
 
   input_port = jack_port_register (client, "midi_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-  output_port = jack_port_register (client, "audio_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+  output_port_l = jack_port_register (client, "audio_out_l", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+  output_port_r = jack_port_register (client, "audio_out_r", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
   if (jack_activate (client))
     {
@@ -112,7 +113,8 @@ JackSampler::init (const Options& options, jack_client_t *client, int argc, char
 int
 JackSampler::process (jack_nframes_t nframes)
 {
-  jack_default_audio_sample_t *out = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port, nframes);
+  jack_default_audio_sample_t *out_l = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port_l, nframes);
+  jack_default_audio_sample_t *out_r = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port_r, nframes);
   void* port_buf = jack_port_get_buffer (input_port, nframes);
   jack_nframes_t event_count = jack_midi_get_event_count (port_buf);
   jack_midi_event_t in_event;
@@ -214,7 +216,8 @@ JackSampler::process (jack_nframes_t nframes)
         }
 
       // generate one sample
-      out[i] = 0.0;
+      out_l[i] = 0.0;
+      out_r[i] = 0.0;
       for (int v = 0; v < voices.size(); v++)
         {
           if (voices[v].state != Voice::UNUSED)
@@ -222,14 +225,32 @@ JackSampler::process (jack_nframes_t nframes)
               voices[v].pos += voices[v].frequency / voices[v].sample->osc_freq *
                                voices[v].sample->mix_freq / jack_mix_freq;
 
-              int ipos = voices[v].pos;
-              double dpos = voices[v].pos - ipos;
-              if (ipos < (voices[v].sample->pcm_data.size() - 1))
-                {
-                  double left = voices[v].sample->pcm_data[ipos];
-                  double right = voices[v].sample->pcm_data[ipos + 1];
-                  out[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
-                }
+	      int ipos = voices[v].pos;
+	      double dpos = voices[v].pos - ipos;
+	      //printf ("debug 1: ipos %d dpos %f\n", ipos, dpos);
+	      switch (voices[v].sample->channels) 
+	      {
+	      case 1:
+		if (ipos < (voices[v].sample->pcm_data.size() - 1))
+		{
+		  double left = voices[v].sample->pcm_data[ipos];
+		  double right = voices[v].sample->pcm_data[ipos + 1];
+		  out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		  out_r[i] = out_l[i];
+		}
+		break;
+	      case 2:
+		if (ipos < (voices[v].sample->pcm_data_l.size() - 1))
+		{
+		  double left = voices[v].sample->pcm_data_l[ipos];
+		  double right = voices[v].sample->pcm_data_l[ipos + 1];
+		  out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		  left = voices[v].sample->pcm_data_r[ipos];
+		  right = voices[v].sample->pcm_data_r[ipos + 1];
+		  out_r[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		}
+		break;
+	      }
             }
           if (voices[v].state == Voice::RELEASE_DELAY)
             {
@@ -247,8 +268,10 @@ JackSampler::process (jack_nframes_t nframes)
                 }
             }
         }
-      out[i] *= 0.333;    /* empiric */
-      mout = std::max (fabs (out[i]), mout);
+      out_l[i] *= 0.333;    /* empiric */
+      out_r[i] *= 0.333;
+      mout = std::max (fabs (out_l[i]), mout);
+      mout = std::max (fabs (out_r[i]), mout);
     }
   return 0;
 }
@@ -308,6 +331,16 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
         s.pcm_data.push_back (block[i]);
       pos += r;
     }
+  if (s.channels == 2)
+  {
+    for( vector<float>::const_iterator iter = s.pcm_data.begin();
+	 iter != s.pcm_data.end(); ++iter ) {
+      s.pcm_data_l.push_back (*iter);
+      ++iter;
+      s.pcm_data_r.push_back (*iter);
+    }
+    // TODO: delete unneeded s.pcm_data
+  }
   printf ("loaded sample, length = %ld, channels = %d\n", s.pcm_data.size(), s.channels);
   s.mix_freq = gsl_data_handle_mix_freq (dhandle);
   s.osc_freq = freqFromNote (note);

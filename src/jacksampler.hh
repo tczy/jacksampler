@@ -30,6 +30,8 @@ struct Sample
   double             mix_freq;
   double             osc_freq;
   std::vector<float> pcm_data;
+  std::vector<float> pcm_data_l;
+  std::vector<float> pcm_data_r;
   int                instrument;
   int                channels;
   std::string        file_name;
@@ -62,7 +64,8 @@ protected:
   double        jack_mix_freq;
 
   jack_port_t  *input_port;
-  jack_port_t  *output_port;
+  jack_port_t  *output_port_l;
+  jack_port_t  *output_port_r;
 
   int           instrument;
   int           instrument_count;
