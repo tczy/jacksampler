@@ -30,8 +30,6 @@ struct Sample
   double             mix_freq;
   double             osc_freq;
   std::vector<float> pcm_data;
-  std::vector<float> pcm_data_l;
-  std::vector<float> pcm_data_r;
   int                instrument;
   int                channels;
   std::string        file_name;
