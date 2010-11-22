@@ -62,8 +62,9 @@ protected:
   double        jack_mix_freq;
 
   jack_port_t  *input_port;
-  jack_port_t  *output_port_l;
-  jack_port_t  *output_port_r;
+  jack_port_t  *output_port_1;
+  jack_port_t  *output_port_2;
+  int           n_output_ports;
 
   int           instrument;
   int           instrument_count;
@@ -76,7 +77,7 @@ protected:
   std::vector<Sample> samples;
   std::vector<Voice> voices;
 
-  void        load_note (const Options& options, int note, const char *file_name, int instrument);
+  int         load_note (const Options& options, int note, const char *file_name, int instrument);
   int         process (jack_nframes_t nframes);
   static int  jack_process (jack_nframes_t nframes, void *arg);
 

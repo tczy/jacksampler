@@ -78,6 +78,7 @@ isNoteOff (const jack_midi_event_t& event)
 }
 
 JackSampler::JackSampler() :
+  n_output_ports (1),
   voices (256),
   instrument (1),
   pedal_down (false),
@@ -100,8 +101,9 @@ JackSampler::init (const Options& options, jack_client_t *client, int argc, char
   jack_mix_freq = jack_get_sample_rate (client);
 
   input_port = jack_port_register (client, "midi_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-  output_port_l = jack_port_register (client, "audio_out_l", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-  output_port_r = jack_port_register (client, "audio_out_r", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+  output_port_1 = jack_port_register (client, "audio_out_1", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+  if (n_output_ports == 2)
+    output_port_2 = jack_port_register (client, "audio_out_2", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
   if (jack_activate (client))
     {
@@ -113,9 +115,13 @@ JackSampler::init (const Options& options, jack_client_t *client, int argc, char
 int
 JackSampler::process (jack_nframes_t nframes)
 {
-  jack_default_audio_sample_t *out_l = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port_l, nframes);
-  jack_default_audio_sample_t *out_r = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port_r, nframes);
+  jack_default_audio_sample_t *out_1;
+  jack_default_audio_sample_t *out_2;
+  out_1 = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port_1, nframes);
+  if (n_output_ports == 2)
+     out_2 = (jack_default_audio_sample_t *) jack_port_get_buffer (output_port_2, nframes);
   void* port_buf = jack_port_get_buffer (input_port, nframes);
+
   jack_nframes_t event_count = jack_midi_get_event_count (port_buf);
   jack_midi_event_t in_event;
   jack_nframes_t event_index = 0;
@@ -216,8 +222,9 @@ JackSampler::process (jack_nframes_t nframes)
         }
 
       // generate one sample
-      out_l[i] = 0.0;
-      out_r[i] = 0.0;
+      out_1[i] = 0.0;
+      if (n_output_ports == 2)
+	out_2[i] = 0.0;
       for (int v = 0; v < voices.size(); v++)
         {
           if (voices[v].state != Voice::UNUSED)
@@ -232,21 +239,22 @@ JackSampler::process (jack_nframes_t nframes)
 		    {
 		      double left = voices[v].sample->pcm_data[ipos];
 		      double right = voices[v].sample->pcm_data[ipos + 1];
-		      out_l[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
-		      out_r[i] = out_l[i];
+		      out_1[i] += (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		      if (n_output_ports == 2)
+			out_2[i] = out_1[i];
 		    }
 		  break;
-		case 2:
+		case 2:  // assert (n_output_ports == 2);
 		  if (ipos < (voices[v].sample->pcm_data.size() - 1))
 		    {
 		      int even = ipos % 2;
 		      double left = voices[v].sample->pcm_data[ipos + even];
 		      double right = voices[v].sample->pcm_data[ipos + 2 + even];
-		      out_l[i] = (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
+		      out_1[i] = (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;
 
 		      left = voices[v].sample->pcm_data[ipos + 1 - even];
 		      right = voices[v].sample->pcm_data[ipos + 3 - even];
-		      out_r[i] = (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;;
+		      out_2[i] = (left * (1.0 - dpos) + right * dpos) * voices[v].env * voices[v].velocity;;
 		    }
 		  break;
 		}
@@ -271,10 +279,13 @@ JackSampler::process (jack_nframes_t nframes)
                 }
             }
         }
-      out_l[i] *= 0.333;    /* empiric */
-      out_r[i] *= 0.333;
-      mout = std::max (fabs (out_l[i]), mout);
-      mout = std::max (fabs (out_r[i]), mout);
+      out_1[i] *= 0.333;    /* empiric */
+      mout = std::max (fabs (out_1[i]), mout);
+      if (n_output_ports == 2)
+        {
+	  out_2[i] *= 0.333;
+	  mout = std::max (fabs (out_2[i]), mout);
+	}
     }
   return 0;
 }
@@ -286,7 +297,7 @@ JackSampler::jack_process (jack_nframes_t nframes, void *arg)
   return instance->process (nframes);
 }
 
-void
+int
 JackSampler::load_note (const Options& options, int note, const char *file_name, int instrument)
 {
   /* open input */
@@ -340,6 +351,8 @@ JackSampler::load_note (const Options& options, int note, const char *file_name,
   s.instrument = instrument;
   s.file_name = file_name;
   samples.push_back (s);
+
+  return s.channels;
 }
 
 void
@@ -355,7 +368,8 @@ JackSampler::parse_config (const Options& options, int instrument, const char *n
 
       if (cfg.command ("sample", note, file))
         {
-          load_note (options, note, file.c_str(), instrument);
+	  if (load_note (options, note, file.c_str(), instrument) == 2)
+	    n_output_ports = 2;
           printf ("NOTE %d FILE %s\n", note, file.c_str());
         }
       else if (cfg.command ("release_delay", d))
@@ -404,6 +418,7 @@ JackSampler::status()
         g_assert_not_reached();
     }
   printf ("sampling rate:   %.2f\n", jack_mix_freq);
+  printf ("output ports:    %d\n", n_output_ports);
   printf ("instruments:     %d\n", instrument_count);
   printf ("active instr.:   %d\n", instrument);
   printf ("total voices:    %d\n", voices.size());
